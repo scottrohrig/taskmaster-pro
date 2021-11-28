@@ -18,8 +18,70 @@ var createTask = function(taskText, taskDate, taskList) {
   $("#list-" + taskList).append(taskLi);
 };
 
+// make trash droppable
+$("#trash").droppable({
+  accept: ".card .list-group-item",
+  tolerance: "touch",
+  drop: function(event,ui) {
+    ui.draggable.remove();
+  },
+  over: function(event, ui) {
+
+  },
+  out: function(event, ui) {
+
+  }
+})
+
+// make tasks sortable across lists
+$(".card .list-group").sortable({
+  connectWith: $(".card .list-group"),
+  scroll: false,
+  tolerance: "pointer",
+  helper: "clone",
+  activate: function(event) {
+  },
+  deactivate: function(event) {
+  },
+  over: function(event) {
+  },
+  out: function(event) {
+  },
+  update: function(event) {
+    var tempArr = [];
+    // loop over values of $(this).children() and push to the new array of the list they are in
+    $(this).children().each(function() {
+      var text = $(this)
+        .find('p')
+        .text()
+        .trim();
+      
+        var date = $(this)
+          .find('span')
+          .text()
+          .trim();
+        
+      tempArr.push({
+        text: text,
+        date: date
+      });
+    });
+
+    // trim off the 'list-' prefix from the class name of the list element
+    var arrName = $(this)
+      .attr('id')
+      .replace('list-', '');
+
+    // update array on tasks obj with corresponding list and save
+    tasks[arrName] = tempArr;
+    saveTasks();
+
+  }
+});
+
+
 var loadTasks = function() {
-  tasks = JSON.parse(localStorage.getItem("tasks"));
+  tasks = JSON.parse(localStorage.getItem("t-master-tasks"));
 
   // if nothing in localStorage, create a new object to track all task status arrays
   if (!tasks) {
@@ -33,7 +95,6 @@ var loadTasks = function() {
 
   // loop over object properties
   $.each(tasks, function(list, arr) {
-    console.log(list, arr);
     // then loop over sub-array
     arr.forEach(function(task) {
       createTask(task.text, task.date, list);
@@ -42,7 +103,7 @@ var loadTasks = function() {
 };
 
 var saveTasks = function() {
-  localStorage.setItem("tasks", JSON.stringify(tasks));
+  localStorage.setItem("t-master-tasks", JSON.stringify(tasks));
 };
 
 // modal was triggered
@@ -70,7 +131,7 @@ $("#task-form-modal .btn-primary").click(function() {
     $("#task-form-modal").modal("hide");
 
     // save in tasks array
-    tasks.toDo.push({
+    tasks["toDo"].push({
       text: taskText,
       date: taskDate
     });
